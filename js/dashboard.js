@@ -1,0 +1,12 @@
+function tick(i){toggleTask(i);dash()}
+function allDone(){ensureToday().items.forEach((x,i)=>{if(!x.done)toggleTask(i)});dash()}
+function dash(){
+ const st=stats(),d=daysLeft(),ex=DB.get('exam',{}),S=subs(),t=ensureToday(),C=['#6d4aff','#3b82f6','#22c55e','#f97316','#ec4899','#14b8a6'];
+ Shell('<div class="banner"><div><h1>Your Smart AI-Powered<br>Board Exam Preparation Assistant ✨</h1><p>Plan • Track • Prepare • Succeed</p><a class="btn w" href="ai-planner.html">Explore Features →</a></div><div class="bot">🤖</div></div>'+
+ '<div class="grid g4 mt"><div class="card st s1">📅<div><b>'+d+'</b><span>Days Remaining</span></div></div><div class="card st s2">📘<div><b>'+st.left+'</b><span>Chapters Left</span></div></div><div class="card st s3">🔥<div><b>'+streakNow()+'</b><span>Day Streak</span></div></div><div class="card st s4">✅<div><b>'+st.p+'%</b><span>Syllabus Progress</span></div></div></div>'+
+ '<div class="grid g3 mt"><div class="card"><div class="between"><h3>📚 My Subjects</h3><a href="syllabus.html" class="tag">View Details →</a></div>'+S.map((s,i)=>'<div class="srow"><span>'+esc(s.name)+'</span><div class="bar"><i style="width:'+subP(s)+'%;background:'+C[i%6]+'"></i></div><small>'+s.chapters.filter(c=>c.done).length+'/'+s.chapters.length+'</small></div>').join('')+'</div>'+
+ '<div class="card" style="text-align:center"><h3>⏳ Exam Countdown</h3>'+ring(timeUsed(),'<div><b class="big">'+d+'</b><br>Days Left</div>')+'<p class="mut">'+Math.floor(d/7)+' weeks · 📅 Exam Date: '+(ex.date?fmt(ex.date):'-')+'</p><a class="btn" href="ai-planner.html">View Study Plan →</a></div>'+
+ '<div class="card"><h3>🔥 Today\'s Plan</h3>'+(t.items.map((x,i)=>'<label class="task"><input type="checkbox" '+(x.done?'checked':'')+' onchange="tick('+i+')"><span class="'+(x.done?'dn':'')+'">'+esc((x.sub?x.sub+' – ':'')+x.text)+'</span></label>').join('')||'<p class="mut">No tasks today. Check your exam date in Settings.</p>')+'<div class="row"><button class="btn o" onclick="allDone()">Mark as Done ✓</button></div></div></div>'+
+ '<div class="grid g2 mt"><div class="card"><div class="between"><h3>📢 Latest Board Updates</h3><a href="updates.html" class="tag">View All →</a></div>'+UPD.slice(0,3).map(u=>'<p>• '+esc(u.t)+' <span class="tag d">Demo</span> <small class="mut">'+esc(u.b)+'</small></p>').join('')+'</div>'+
+ '<div class="card"><div class="between"><h3>📊 Your Progress</h3><a href="progress.html" class="tag">View Report →</a></div>'+ring(st.p,'<b class="big">'+st.p+'%</b>')+'</div></div>')}
+dash();

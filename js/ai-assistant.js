@@ -1,0 +1,23 @@
+const QUICK=['📅 How many days are left?','📚 Create my study plan','📖 Show my remaining syllabus','🎯 What should I study today?','📊 Check my progress','🔥 Motivate me','📝 Help me with past paper preparation'];
+const QUOTES=['Small steps every day beat last-minute cramming. 💪','You have a plan - now trust the process. ✨','Consistency is your superpower. 🔥','One chapter at a time. You can do it! 🏆'];
+function chatHTML(){return '<button class="chatbtn" onclick="toggleChat()" aria-label="Open chat">💬</button><div class="chat" id="chat" hidden><div class="chat-h">🤖 <b>EduBoard AI Assistant</b><span onclick="toggleChat()">✕</span></div><div class="chat-b" id="cb"></div><div class="chat-q">'+QUICK.map(q=>'<button onclick="ask(this.textContent)">'+q+'</button>').join('')+'</div><div class="chat-i"><input class="in" id="ci" placeholder="Type your message..." onkeydown="if(event.key===\'Enter\')ask()"><button class="btn" onclick="ask()">➤</button></div></div>'}
+function say(h,me){const b=$('cb');b.insertAdjacentHTML('beforeend','<div class="m '+(me?'me':'bot')+'">'+h+'</div>');b.scrollTop=b.scrollHeight}
+function toggleChat(){const c=$('chat');c.hidden=!c.hidden;if(!c.hidden&&!$('cb').children.length)say('Hello '+esc(session().name.split(' ')[0])+'! 👋<br>I am your EduBoard AI Study Assistant. How can I help you today?')}
+function openChat(){if($('chat').hidden)toggleChat()}
+function ask(t){const i=$('ci');t=(t||i.value||'').trim();if(!t)return;i.value='';say(esc(t),1);setTimeout(()=>say(reply(t)),300)}
+function reply(q){const l=q.toLowerCase(),S=subs(),st=stats(),d=daysLeft(),ex=DB.get('exam',{}),has=a=>a.some(x=>l.includes(x));
+ if(l.includes('add')&&l.includes('weak')){const w=S.filter(s=>!s.weak).sort((a,b)=>subP(a)-subP(b))[0];if(!w)return 'All your subjects are already marked weak.';w.weak=true;DB.set('subjects',S);resetToday();return '✅ I marked <b>'+esc(w.name)+'</b> (lowest progress) as a weak subject. It now gets extra study time in your plan.'}
+ if(has(['weak','analy'])){const a=S.slice().sort((a,b)=>subP(a)-subP(b)).slice(0,3);return a.length?'📊 Your weakest areas by progress:<br>'+a.map(s=>'• '+esc(s.name)+': '+subP(s)+'%').join('<br>')+'<br>Say "add weak topics to my plan" and I will prioritise them.':'Add subjects first.'}
+ if(l.includes('explain'))return '🧠 Paste the question here with its subject. Tip: break it into what is given, what is asked, and which formula/concept links them. (A real AI API can be connected later for full explanations.)';
+ if(l.includes('which chapter'))return '📖 Tell me the topic or keywords and I will help match it to your syllabus chapters. Check <a href="syllabus.html"><u>My Syllabus</u></a> for your chapter list.';
+ if(l.includes('important'))return '🎯 Focus on high-weight topics: chapters marked Hard, topics repeated in the last 3 years of past papers, and your weak subjects. See <a href="papers.html"><u>Papers</u></a>.';
+ if(l.includes('practice question'))return '📝 Method: take a chapter, close the book, write 5 short + 2 long questions, then check them. Do this for one chapter daily.';
+ if(has(['past paper','paper']))return '📝 Past paper plan: 1) Start with the last 3 years. 2) Time yourself. 3) Mark mistakes. 4) Revise those topics. Find them in <a href="papers.html"><u>Papers & Resources</u></a>.';
+ if(has(['syllabus','remaining'])){return '📖 You have <b>'+st.left+'</b> chapters left:<br>'+S.map(s=>{const r=s.chapters.filter(c=>!c.done);return '• '+esc(s.name)+': '+r.length+' left'}).join('<br>')}
+ if(has(['today','what should i study'])){const t=ensureToday().items.filter(x=>!x.done);return t.length?'🎯 Today:<br>'+t.map(x=>'○ '+esc((x.sub?x.sub+' – ':'')+x.text)+' ('+fmtMin(x.min)+')').join('<br>'):'🎉 Nothing pending today. Great job!'}
+ if(l.includes('plan')){const p=buildPlan().slice(0,3);if(!p.length)return 'Set an exam date in Settings first.';return '📚 Your plan for the next '+d+' days uses '+(ex.hours||2)+'h/day. Next days:<br>'+p.map((x,i)=>'<b>'+(i?'Day '+(i+1):'Today')+':</b> '+x.tasks.map(t=>esc((t.sub?t.sub+' ':'')+t.text)).join(', ')).join('<br>')+'<br><a href="ai-planner.html"><u>Open full plan</u></a>'}
+ if(has(['progress']))return '📊 Syllabus: <b>'+st.p+'%</b> ('+st.d+'/'+st.t+' chapters). 🔥 Streak: '+streakNow()+' days.';
+ if(has(['motivat']))return QUOTES[Math.floor(Math.random()*QUOTES.length)];
+ if(has(['days','left','exam','countdown']))return d?'📅 You have <b>'+d+' days</b> ('+Math.floor(d/7)+' weeks) left. Exam date: '+fmt(ex.date)+'.':'Please set your exam date in Settings.';
+ if(has(['hi','hello','salam']))return 'Hello! 👋 Try one of the quick options below.';
+ return "I can help with days left, your study plan, syllabus, today's tasks, progress and motivation. Try the quick buttons! 😊"}
